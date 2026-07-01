@@ -37,6 +37,9 @@ void register_mesh2(jlcxx::Module& mod) {
 
   // --- Mesh: h-field queries ---
   mod.method("GetH", [](const MeshPtr& m, const Point3d& p) { return m->GetH(p); });
+  mod.method("GetHPointIndex", [](const MeshPtr& m, int pi) {
+    return m->GetH(PointIndex(pi));
+  });
 
   // --- Mesh: global size control ---
   mod.method("SetGlobalH",  [](const MeshPtr& m, double h) { m->SetGlobalH(h); });
@@ -128,6 +131,23 @@ void register_mesh2(jlcxx::Module& mod) {
   });
   mod.method("GetSubMesh", [](const MeshPtr& m, const std::string& domains, const std::string& faces) {
     return m->GetSubMesh(domains, faces);
+  });
+
+  // --- codimension / per-element region names (Mesh API) ---
+  mod.method("GetCD2Name", [](const MeshPtr& m, int cd2nr) -> std::string {
+    return std::string(m->GetCD2Name(cd2nr));
+  });
+  mod.method("GetCD3Name", [](const MeshPtr& m, int cd3nr) -> std::string {
+    return std::string(m->GetCD3Name(cd3nr));
+  });
+  mod.method("GetRegionNameVolume", [](const MeshPtr& m, int enr) -> std::string {
+    return std::string(m->GetRegionName(ElementIndex(enr)));
+  });
+  mod.method("GetRegionNameSurface", [](const MeshPtr& m, int senr) -> std::string {
+    return std::string(m->GetRegionName(SurfaceElementIndex(senr)));
+  });
+  mod.method("GetRegionNameSegment", [](const MeshPtr& m, int segnr) -> std::string {
+    return std::string(m->GetRegionName(SegmentIndex(segnr)));
   });
 
   // --- MeshTopology: GetVerticesEdge (find edge from two vertex indices; different from GetEdgeVertices) ---
