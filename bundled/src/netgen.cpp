@@ -3,7 +3,8 @@
 // combiner functions. All higher-level logic lives in Netgen.jl.
 // One unavoidable exception: `new_mesh` (shared_ptr allocator for Mesh).
 // Built against NGSolveNetgen_jll (stock build; exported symbols only).
-// OCC modeling kernel is a SEPARATE module in occ.cpp (define_julia_module_occ).
+// Netgen CxxWrap module (meshing/refinement only). OCCT modeling lives in
+// OpenCascadeCxxWrap_jll (libopencascade_cxxwrap).
 #include <jlcxx/jlcxx.hpp>
 
 void register_mesh(jlcxx::Module&);
@@ -15,6 +16,7 @@ void register_gprim(jlcxx::Module&);
 void register_mesh2(jlcxx::Module&);
 void register_ngx2(jlcxx::Module&);
 void register_ngx3(jlcxx::Module&);
+void register_occ_bridge(jlcxx::Module&);
 
 JLCXX_MODULE define_julia_module(jlcxx::Module& mod)
 {
@@ -28,4 +30,5 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod)
   register_mesh2(mod);      // EdgeDescriptor, GetBox, remaining Mesh methods, LocalH::Copy/Delete
   register_ngx2(mod);       // Ngx_Mesh hp/order/refine; MeshVolume/OptimizeVolume free fns
   register_ngx3(mod);       // Ngx_Mesh transforms, parent edge/face, periodic, partition hints
+  register_occ_bridge(mod); // BREP string → OCCGeometry (internal TopoDS; no Julia TopoDS type)
 }

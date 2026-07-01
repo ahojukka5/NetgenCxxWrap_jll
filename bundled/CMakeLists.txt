@@ -1,14 +1,6 @@
 # Build libnetgen_cxxwrap — the CxxWrap-based Julia binding for Netgen's exported
 # C++ API. It links the prebuilt libnglib/libngcore (from NGSolveNetgen_jll) and
-# the OpenCASCADE toolkits (from OCCT_jll), plus JlCxx/libcxxwrap_julia. It uses
-# only EXPORTED Netgen symbols (no hidden CSG primitive constructors).
-#
-#   NETGEN_ROOT : install root with Netgen headers (include/, include/include/)
-#                 and libs (lib/). BinaryBuilder: the prefix; local dev: the
-#                 extracted NGSolveNetgen artifact (pass -DNETGEN_ROOT=...).
-#   JlCxx       : found via find_package(JlCxx) on CMAKE_PREFIX_PATH (the CxxWrap
-#                 / libcxxwrap_julia prefix).
-#   OpenCASCADE : found via find_package on CMAKE_PREFIX_PATH (OCCT_jll).
+# the OpenCASCADE toolkits (from OCCT_jll) for the internal BREP bridge only.
 cmake_minimum_required(VERSION 3.16)
 project(NetgenCxxWrap CXX)
 
@@ -17,7 +9,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(NETGEN_ROOT "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Netgen install root (headers + libs)")
 
-# Match the defines Netgen's public headers were compiled with (USE_OCC build).
 add_compile_definitions(OCCGEOMETRY OCC_CONVERT_SIGNALS NXG_HAS_OCC)
 
 find_package(JlCxx CONFIG REQUIRED)
@@ -34,33 +25,7 @@ add_library(netgen_cxxwrap SHARED
   src/netgen_mesh2.cpp
   src/netgen_ngx2.cpp
   src/netgen_ngx3.cpp
-  src/occ.cpp
-  src/occ_gp.cpp
-  src/occ_topology.cpp
-  src/occ_builders.cpp
-  src/occ_io.cpp
-  src/occ_props.cpp
-  src/occ_fillet.cpp
-  src/occ_topo2.cpp
-  src/occ_adaptor.cpp
-  src/occ_analysis.cpp
-  src/occ_sweep.cpp
-  src/occ_wire.cpp
-  src/occ_sewing.cpp
-  src/occ_extrema.cpp
-  src/occ_builder2.cpp
-  src/occ_intersect.cpp
-  src/occ_shape_analysis.cpp
-  src/occ_breptools.cpp
-  src/occ_mesh.cpp
-  src/occ_shapefix2.cpp
-  src/occ_shapeupgrade.cpp
-  src/occ_toptools_list.cpp
-  src/occ_geom.cpp
-  src/occ_feat.cpp
-  src/occ_thicksolid.cpp
-  src/occ_draft.cpp
-  src/occ_breplib.cpp
+  src/netgen_occ_bridge.cpp
 )
 target_compile_features(netgen_cxxwrap PRIVATE cxx_std_17)
 
@@ -78,9 +43,6 @@ target_link_libraries(netgen_cxxwrap PRIVATE
   ${OpenCASCADE_LIBRARIES}
 )
 
-# CxxWrap requires DEFAULT symbol visibility so its type_info-keyed type-factory
-# registry is shared across the libcxxwrap_julia / libnetgen_cxxwrap boundary
-# (hidden visibility breaks type registration at load time).
 set_target_properties(netgen_cxxwrap PROPERTIES
   CXX_VISIBILITY_PRESET default
   VISIBILITY_INLINES_HIDDEN OFF)

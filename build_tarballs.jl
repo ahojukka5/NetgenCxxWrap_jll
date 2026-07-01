@@ -2,18 +2,10 @@
 # `julia build_tarballs.jl --help` to see a usage message.
 using BinaryBuilder, Pkg
 
-# NetgenCxxWrap — a CxxWrap-based Julia binding for the exported C++ API of
-# NGSolve/Netgen. This JLL builds `libnetgen_cxxwrap`, a CxxWrap module linked
-# against the prebuilt NGSolve/Netgen libraries (NGSolveNetgen_jll), the
-# OpenCASCADE toolkits (OCCT_jll) and JlCxx/libcxxwrap_julia
-# (libcxxwrap_julia_jll). It is a boring, comprehensive wrapper: it exposes
-# exported Netgen C++ functionality to Julia and contains no logic of its own.
-# Higher-level utilities live in the Netgen.jl package.
-#
-# It uses only EXPORTED Netgen symbols (OCC loaders, Mesh/MeshTopology accessors,
-# NetgenGeometry/Refinement); it does not touch the hidden CSG primitive
-# constructors. Because a BinaryBuilder `Dependency` resolves from the registry,
-# this recipe can only be built once NGSolveNetgen_jll is registered.
+# NetgenCxxWrap — CxxWrap-based Julia binding for Netgen meshing/refinement.
+# Builds `libnetgen_cxxwrap` linked against NGSolveNetgen_jll, OCCT_jll (internal
+# BREP bridge only), and libcxxwrap_julia_jll. OCCT modeling bindings live in
+# OpenCascadeCxxWrap_jll.
 name = "NetgenCxxWrap"
 version = v"0.1.0"
 

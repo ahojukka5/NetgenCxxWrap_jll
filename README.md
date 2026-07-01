@@ -7,6 +7,13 @@ It is intentionally **boring and comprehensive**: a wrapper that exposes Netgen
 C++ functionality (mesh, geometry, topology, refinement) to Julia, with no logic
 of its own. Higher-level utilities live in the `Netgen.jl` package.
 
+## OpenCASCADE split (done)
+
+OCCT modeling bindings moved to **`OpenCascadeCxxWrap_jll`** / **`OpenCascade.jl`**.
+This JLL keeps Netgen meshing plus **`OCCGeometry_from_brep_string`** only.
+
+See [`OpenCascadeCxxWrap_jll/README.md`](../OpenCascadeCxxWrap_jll/README.md).
+
 ## Design
 
 - Builds `libnetgen_cxxwrap` (a `JLCXX_MODULE`) from a single
@@ -42,6 +49,7 @@ bundled/
   LICENSE                  # MIT (wrapper); links LGPL Netgen/OCC at run time
   CMakeLists.txt           # builds libnetgen_cxxwrap (JlCxx + nglib + OCC)
   src/
-    netgen.cpp             # the entire 1:1 CxxWrap module (define_julia_module)
+    netgen.cpp             # Netgen CxxWrap module (define_julia_module)
+    netgen_occ_bridge.cpp  # BREP string → OCCGeometry (internal)
 docs/NEXTGEN_CXXWRAP_DESIGN.md
 ```
