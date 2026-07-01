@@ -4,7 +4,8 @@
 
 `Netgen` is a **CxxWrap-based Julia binding and extension layer for the exported
 C++ API of NGSolve/Netgen**, with additional Julia-side utilities for
-geometry-backed mesh hierarchies and Oodi.jl GMG integration.
+geometry-backed mesh hierarchies and geometric-multigrid / hp-adaptivity
+integration.
 
 The native binding is `libnetgen_cxxwrap` (built by `NetgenCxxWrap_jll`), a
 [CxxWrap](https://github.com/JuliaInterop/CxxWrap.jl) module linked against the
@@ -33,8 +34,8 @@ NetgenCxxWrap_jll   builds libnetgen_cxxwrap: a CxxWrap module linked against
                     comprehensive wrapper; no logic of its own.
 Netgen.jl          loads libnetgen_cxxwrap via CxxWrap.@wrapmodule; adds Julian
                     conveniences (points, tetrahedra, generate_mesh, refine!,
-                    uniform_hierarchy, …) and, later, Oodi GMG helpers.
-Oodi.jl            uses Netgen.jl as the geometry-backed mesh-hierarchy backend.
+                    uniform_hierarchy, …) and GMG/hp-hierarchy helpers.
+consumer           uses Netgen.jl as the geometry-backed mesh-hierarchy backend.
 ```
 
 ## Relationship to NGSolveNetgen_jll
@@ -64,7 +65,7 @@ OCC / BREP / STEP / IGES geometry
 → Netgen mesh generation (NetgenGeometry::GenerateMesh)
 → Netgen refinement (Refinement::Refine, geometry-aware)
 → Netgen.jl mesh extraction + hierarchy utilities (points, tetrahedra, …)
-→ Oodi.jl GMG integration
+→ consumer GMG integration
 ```
 
 A secondary CSG route (Netgen.jl geometry DSL → serialize to `.geo`/CSG text →
@@ -130,14 +131,14 @@ GMG-hierarchy readers `num_levels`, `level_nvertices`, `parent_nodes`
 multi-level builder `copy_mesh` / `uniform_hierarchy` → `MeshHierarchy` (a stack
 of nested distinct meshes with per-level `prolongation`, `coarsest`/`finest`).
 
-## How this supports the Oodi GMG roadmap
+## How this supports the GMG roadmap
 
 Geometry-aware refinement (new boundary points project onto the true OCC
 surface) plus the refinement-hierarchy parent maps (`mlbetweennodes` →
 `point_parents`) are the raw ingredients for prolongation/restriction operators.
 `Netgen.jl` composes mesh generation + refinement into hierarchies
-(`uniform_hierarchy`, later an adaptive driver with synthetic indicators); Oodi
-consumes extracted points/connectivity/topology/tags into its mesh carrier,
+(`uniform_hierarchy`, later an adaptive driver with synthetic indicators); a
+consumer takes extracted points/connectivity/topology/tags into its mesh carrier,
 function spaces, matrix-free operators, and GMG transfers.
 
 ## Status (built & tested locally, macOS arm64)
@@ -146,6 +147,6 @@ Phases 1–8 are working and tested against the stock NGSolveNetgen artifact via
 local CxxWrap build (`Netgen.jl/gen/build_local.jl`): module load, value types,
 mesh core + extraction, OCC load + mesh generation, uniform refinement + parent
 maps, topology, and uniform hierarchies. The adaptive-hierarchy driver (Phase 9)
-and Oodi integration (Phase 10) are future Julia-side work. Cross-platform
+and downstream solver integration (Phase 10) are future Julia-side work. Cross-platform
 binaries come from `NetgenCxxWrap_jll/build_tarballs.jl` once `NGSolveNetgen_jll`
 is registered (the recipe `Dependency`s resolve from the registry).
