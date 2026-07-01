@@ -62,6 +62,40 @@ void register_ngx2(jlcxx::Module& mod) {
     if (buf.size() >= 2) { buf[0] = ox; buf[1] = oy; }
   });
 
+  // hp / p-refinement apply (strict 1:1 Ngx_Mesh setters)
+  mod.method("SetElementOrder", [](Ngx_Mesh& m, int enr, int order) {
+    m.SetElementOrder(enr, order);
+  });
+  mod.method("SetElementOrders", [](Ngx_Mesh& m, int enr, int ox, int oy, int oz) {
+    m.SetElementOrders(enr, ox, oy, oz);
+  });
+  mod.method("SetSurfaceElementOrder", [](Ngx_Mesh& m, int enr, int order) {
+    m.SetSurfaceElementOrder(enr, order);
+  });
+  mod.method("SetSurfaceElementOrders", [](Ngx_Mesh& m, int enr, int ox, int oy) {
+    m.SetSurfaceElementOrders(enr, ox, oy);
+  });
+
+  // Ngx_Mesh::SetRefinementFlag<DIM> (elnr is 0-based; Netgen uses elnr+1 internally)
+  mod.method("SetRefinementFlag2", [](Ngx_Mesh& m, int elnr, bool flag) {
+    m.SetRefinementFlag<2>(size_t(elnr), flag);
+  });
+  mod.method("SetRefinementFlag3", [](Ngx_Mesh& m, int elnr, bool flag) {
+    m.SetRefinementFlag<3>(size_t(elnr), flag);
+  });
+
+  // Ngx_Mesh::Refine (marked-element h/p/hp bisection; distinct from Refinement::Refine)
+  mod.method("NgxRefine", [](Ngx_Mesh& m, int reftype, bool onlyonce) {
+    m.Refine(static_cast<NG_REFINEMENT_TYPE>(reftype), onlyonce);
+  });
+
+  // Ngx_Mesh::HPRefinement / SplitAlfeld (global hp split drivers)
+  mod.method("HPRefinement", [](Ngx_Mesh& m, int levels, double parameter,
+                                 bool setorders, bool ref_level) {
+    m.HPRefinement(levels, parameter, setorders, ref_level);
+  });
+  mod.method("SplitAlfeld", [](Ngx_Mesh& m) { m.SplitAlfeld(); });
+
   // Cluster representative IDs (hp-refinement)
   mod.method("GetClusterRepVertex",  [](const Ngx_Mesh& m, int vi)  { return m.GetClusterRepVertex(vi); });
   mod.method("GetClusterRepEdge",    [](const Ngx_Mesh& m, int edi) { return m.GetClusterRepEdge(edi); });
