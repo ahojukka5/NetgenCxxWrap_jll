@@ -14,6 +14,7 @@ void register_stl(jlcxx::Module&);
 void register_gprim(jlcxx::Module&);
 void register_mesh2(jlcxx::Module&);
 void register_ngx2(jlcxx::Module&);
+void register_ngx3(jlcxx::Module&);
 
 JLCXX_MODULE define_julia_module(jlcxx::Module& mod)
 {
@@ -25,5 +26,6 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod)
   register_stl(mod);        // STLGeometry, STLParameters
   register_gprim(mod);      // Box3d, Point3dTree, SplineGeometry2d
   register_mesh2(mod);      // EdgeDescriptor, GetBox, remaining Mesh methods, LocalH::Copy/Delete
-  register_ngx2(mod);       // Remaining Ngx_Mesh methods, MeshVolume/OptimizeVolume free fns
+  register_ngx2(mod);       // Ngx_Mesh hp/order/refine; MeshVolume/OptimizeVolume free fns
+  register_ngx3(mod);       // Ngx_Mesh transforms, parent edge/face, periodic, partition hints
 }
