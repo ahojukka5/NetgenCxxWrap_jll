@@ -33,6 +33,7 @@ add_library(netgen_cxxwrap SHARED
   src/netgen_gprim.cpp
   src/netgen_mesh2.cpp
   src/netgen_ngx2.cpp
+  src/netgen_ngx3.cpp
   src/occ.cpp
   src/occ_gp.cpp
   src/occ_topology.cpp
