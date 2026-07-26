@@ -10,8 +10,8 @@ void register_mesh(jlcxx::Module& mod) {
   mod.add_type<Vec3d>("Vec3d").constructor<double, double, double>();
   auto meshpoint_t = mod.add_type<MeshPoint>("MeshPoint");
   meshpoint_t.method([](const MeshPoint& p, int i) { return p(i); });
-  mod.add_type<Element>("Element");
-  mod.add_type<Element2d>("Element2d");
+  mod.add_type<Element>("Element").constructor<int>();
+  mod.add_type<Element2d>("Element2d").constructor<int>();
   mod.add_type<MeshTopology>("MeshTopology");
 
   // Point3d / Vec3d
