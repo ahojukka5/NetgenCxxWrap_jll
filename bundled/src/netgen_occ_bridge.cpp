@@ -30,10 +30,11 @@ OCCPtr require_occ_geometry(const GeoPtr& geom) {
 }
 
 netgen::ListOfShapes face_list(
-    const OCCPtr& occ, const jlcxx::ArrayRef<int>& indices) {
+    const OCCPtr& occ, jlcxx::ArrayRef<int> indices) {
   netgen::ListOfShapes result;
   result.reserve(indices.size());
-  for (const int index : indices) {
+  for (std::size_t i = 0; i < indices.size(); ++i) {
+    const int index = indices[i];
     if (index < 1 || index > occ->fmap.Extent())
       throw std::out_of_range("OCC face index out of range");
     result.push_back(occ->fmap(index));
@@ -81,8 +82,8 @@ void register_occ_bridge(jlcxx::Module& mod) {
 
   mod.method("OCC_IdentifyFacesBulk",
              [](const GeoPtr& geom,
-                const jlcxx::ArrayRef<int>& from_indices,
-                const jlcxx::ArrayRef<int>& to_indices,
+                jlcxx::ArrayRef<int> from_indices,
+                jlcxx::ArrayRef<int> to_indices,
                 const std::string& name,
                 int type,
                 double tx,
