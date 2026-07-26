@@ -112,7 +112,9 @@ void register_mesh2(jlcxx::Module& mod) {
   // --- Mesh: boundary tracking ---
   mod.method("AddLockedPoint",               [](const MeshPtr& m, int pi) { m->AddLockedPoint(PointIndex(pi)); });
   mod.method("FindOpenElements",             [](const MeshPtr& m, int dom) { m->FindOpenElements(dom); });
+  mod.method("GetNOpenElements",             [](const MeshPtr& m) { return m->GetNOpenElements(); });
   mod.method("FindOpenSegments",             [](const MeshPtr& m, int surfnr) { m->FindOpenSegments(surfnr); });
+  mod.method("GetNOpenSegments",             [](const MeshPtr& m) { return m->GetNOpenSegments(); });
   mod.method("RemoveOneLayerSurfaceElements",[](const MeshPtr& m) { m->RemoveOneLayerSurfaceElements(); });
 
   // --- Mesh: h-restriction and file I/O ---
