@@ -28,7 +28,9 @@ void register_mesh(jlcxx::Module& mod) {
   mod.method("GetNV", [](const Element& e) { return int(e.GetNV()); });
   mod.method("GetType", [](const Element& e) { return int(e.GetType()); });
   mod.method("GetIndex", [](const Element& e) { return e.GetIndex(); });
+  mod.method("SetIndex", [](Element& e, int index) { e.SetIndex(index); });
   mod.method("PNum", [](const Element& e, int i) { return int(e.PNum(i)); });
+  mod.method("SetPNum", [](Element& e, int i, int point) { e.PNum(i) = PointIndex(point); });
   mod.method("SetRefinementFlag", [](Element& e, bool f) { e.SetRefinementFlag(f); });
   mod.method("TestRefinementFlag", [](const Element& e) { return e.TestRefinementFlag(); });
   mod.method("SetStrongRefinementFlag", [](Element& e, bool f) { e.SetStrongRefinementFlag(f); });
@@ -37,7 +39,9 @@ void register_mesh(jlcxx::Module& mod) {
   mod.method("GetNV", [](const Element2d& e) { return int(e.GetNV()); });
   mod.method("GetType", [](const Element2d& e) { return int(e.GetType()); });
   mod.method("GetIndex", [](const Element2d& e) { return e.GetIndex(); });
+  mod.method("SetIndex", [](Element2d& e, int index) { e.SetIndex(index); });
   mod.method("PNum", [](const Element2d& e, int i) { return int(e.PNum(i)); });
+  mod.method("SetPNum", [](Element2d& e, int i, int point) { e.PNum(i) = PointIndex(point); });
   mod.method("SetRefinementFlag", [](Element2d& e, bool f) { e.SetRefinementFlag(f); });
   mod.method("TestRefinementFlag", [](const Element2d& e) { return e.TestRefinementFlag(); });
   mod.method("SetStrongRefinementFlag", [](Element2d& e, bool f) { e.SetStrongRefinementFlag(f); });
