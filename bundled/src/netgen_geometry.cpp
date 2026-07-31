@@ -55,7 +55,26 @@ void register_geometry(jlcxx::Module& mod) {
 
   // Mesh
   mod.method("new_mesh", []() { return std::make_shared<Mesh>(); });
-  mod.method("assign", [](const MeshPtr& dst, const MeshPtr& src) { *dst = *src; });
+  mod.method("assign", [](const MeshPtr& dst, const MeshPtr& src) {
+    *dst = *src;
+    // Mesh::operator= does not carry over periodic/close-surface
+    // identifications: Identifications holds a reference back to its owning
+    // Mesh, so dst keeps the empty Identifications it was constructed with.
+    // Re-register src's entries against dst's own Identifications by their
+    // public point-pair API instead of copy-assigning the object itself.
+    auto& src_ident = src->GetIdentifications();
+    auto& dst_ident = dst->GetIdentifications();
+    int max_nr = src_ident.GetMaxNr();
+    for (int nr = 1; nr <= max_nr; ++nr) {
+      NgArray<INDEX_2> pairs;
+      src_ident.GetPairs(nr, pairs);
+      for (int i = 0; i < pairs.Size(); ++i) {
+        dst_ident.Add(pairs[i].I1(), pairs[i].I2(), nr);
+      }
+      dst_ident.SetType(nr, src_ident.GetType(nr));
+      dst_ident.SetName(nr, src_ident.GetName(nr));
+    }
+  });
   mod.method("GetNP", [](const MeshPtr& m) { return m->GetNP(); });
   mod.method("GetNV", [](const MeshPtr& m) { return int(m->GetNV()); });
   mod.method("GetNE", [](const MeshPtr& m) { return m->GetNE(); });
