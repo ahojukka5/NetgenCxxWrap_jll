@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(NETGEN_ROOT "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Netgen install root (headers + libs)")
 
-add_compile_definitions(OCCGEOMETRY OCC_CONVERT_SIGNALS NXG_HAS_OCC)
+add_compile_definitions(OCCGEOMETRY OCC_CONVERT_SIGNALS)
 
 find_package(JlCxx CONFIG REQUIRED)
 find_package(OpenCASCADE REQUIRED)

@@ -19,7 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-Note: libnetgen_cxxwrap links Netgen (LGPL-2.1) and OpenCASCADE (LGPL-2.1 with
-exception) at run time via NGSolveNetgen_jll and OCCT_jll; the CxxWrap wrapper
-source in this directory is MIT-licensed.
