@@ -5,19 +5,18 @@ module that binds the exported C++ API of NGSolve/Netgen for use from Julia.
 
 It is intentionally **boring and comprehensive**: a wrapper that exposes Netgen
 C++ functionality (mesh, geometry, topology, refinement) to Julia, with no logic
-of its own. Higher-level utilities live in the `Netgen.jl` package.
+of its own. Higher-level utilities live in **Delone.jl**.
 
 ## OpenCASCADE split (done)
 
-OCCT modeling bindings moved to **`OpenCascadeCxxWrap_jll`** / **`OpenCascade.jl`**.
+OCCT modeling bindings moved to **[`ahojukka5/OpenCascadeCxxWrap`](https://github.com/ahojukka5/OpenCascadeCxxWrap)**.
 This JLL keeps Netgen meshing plus **`OCCGeometry_from_brep_string`** only.
-
-See [`OpenCascadeCxxWrap_jll/README.md`](../OpenCascadeCxxWrap_jll/README.md).
 
 ## Design
 
-- Builds `libnetgen_cxxwrap` (a `JLCXX_MODULE`) from a single
-  `bundled/src/netgen.cpp`.
+- Builds `libnetgen_cxxwrap` (a `JLCXX_MODULE`). `bundled/CMakeLists.txt`
+  compiles eleven translation units; `bundled/src/netgen.cpp` is only the
+  registrar (`define_julia_module` plus `register_*` calls).
 - **Strict 1:1 wrapping**: every wrapped name matches Netgen's own C++ name
   (`Mesh::GetNP` → `GetNP`, `UpdateTopology`, `GetTopology`, `GetNEdges`,
   `LoadOCC_STEP`, `GenerateMesh`, `Refine`, `Point`, `VolumeElement`, `PNum`, …)
@@ -37,19 +36,37 @@ See [`docs/NEXTGEN_CXXWRAP_DESIGN.md`](docs/NEXTGEN_CXXWRAP_DESIGN.md).
 
 `build_tarballs.jl` is authored but not yet built/registered: a BinaryBuilder
 `Dependency` resolves from the registry, so it can only build once
-`NGSolveNetgen_jll` is registered. For development, build locally with
-`Netgen.jl/gen/build_local.jl` (links the extracted artifact + the CxxWrap
-prefix; this platform only).
+`NGSolveNetgen_jll` is registered (there is no
+`JuliaBinaryWrappers/NGSolveNetgen_jll.jl`).
+
+The live binary is the **`libnetgen_cxxwrap`** artifact on
+[`oodi-artifacts`](https://github.com/ahojukka5/oodi-artifacts), consumed by
+Delone.jl. Latest published tree is
+[`libnetgen_cxxwrap-d2a7f166`](https://github.com/ahojukka5/oodi-artifacts/releases/tag/libnetgen_cxxwrap-d2a7f166)
+(2026-07-29), built from this repo at `301822b`. Later `master` commits —
+including the identification-copy fix in `2985283` — are not in that artifact.
 
 ## Layout
 
 ```
+LICENSE                    # MIT (wrapper)
 build_tarballs.jl          # recipe: deps NGSolveNetgen_jll + OCCT_jll + libcxxwrap_julia_jll
 bundled/
   LICENSE                  # MIT (wrapper); links LGPL Netgen/OCC at run time
-  CMakeLists.txt           # builds libnetgen_cxxwrap (JlCxx + nglib + OCC)
+  CMakeLists.txt           # builds libnetgen_cxxwrap from the eleven TUs below
   src/
-    netgen.cpp             # Netgen CxxWrap module (define_julia_module)
-    netgen_occ_bridge.cpp  # BREP string → OCCGeometry (internal)
+    netgen.cpp             # registrar: define_julia_module → register_*
+    netgen_mesh.cpp        # Point3d, Vec3d, MeshPoint, Element, Element2d, MeshTopology
+    netgen_geometry.cpp    # MeshingParameters, BisectionOptions, NetgenGeometry,
+                           # Refinement, Mesh, Ngx_Mesh, LoadOCC_* free fns
+    netgen_geom2d.cpp      # Solid2d, CSG2d, Circle, Rectangle
+    netgen_extras.cpp      # Segment, FaceDescriptor, LocalH, extra Mesh/MeshTopology
+    netgen_stl.cpp         # STLGeometry, STLParameters
+    netgen_gprim.cpp       # Box3d, Point3dTree, SplineGeometry2d
+    netgen_mesh2.cpp       # EdgeDescriptor, GetBox, remaining Mesh methods
+    netgen_ngx2.cpp        # Ngx_Mesh hp/order/refine; MeshVolume/OptimizeVolume
+    netgen_ngx3.cpp        # Ngx_Mesh transforms, parent edge/face, periodic, partition
+    netgen_occ_bridge.cpp  # BREP string → OCCGeometry (internal; no Julia TopoDS)
 docs/NEXTGEN_CXXWRAP_DESIGN.md
+docs/WRAPPING_PLAN.md
 ```
