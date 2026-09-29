@@ -68,5 +68,4 @@ bundled/
     netgen_ngx3.cpp        # Ngx_Mesh transforms, parent edge/face, periodic, partition
     netgen_occ_bridge.cpp  # BREP string → OCCGeometry (internal; no Julia TopoDS)
 docs/NEXTGEN_CXXWRAP_DESIGN.md
-docs/WRAPPING_PLAN.md
 ```
