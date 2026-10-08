@@ -30,7 +30,7 @@ This JLL keeps Netgen meshing plus **`OCCGeometry_from_brep_string`** only.
   are not wrapped; OCC/BREP/STEP/IGES is the primary geometry route.
 - Does not rebuild or patch upstream Netgen.
 
-See [`docs/NEXTGEN_CXXWRAP_DESIGN.md`](docs/NEXTGEN_CXXWRAP_DESIGN.md).
+See [`docs/CXXWRAP_DESIGN.md`](docs/CXXWRAP_DESIGN.md).
 
 ## Status
 
@@ -67,5 +67,5 @@ bundled/
     netgen_ngx2.cpp        # Ngx_Mesh hp/order/refine; MeshVolume/OptimizeVolume
     netgen_ngx3.cpp        # Ngx_Mesh transforms, parent edge/face, periodic, partition
     netgen_occ_bridge.cpp  # BREP string → OCCGeometry (internal; no Julia TopoDS)
-docs/NEXTGEN_CXXWRAP_DESIGN.md
+docs/CXXWRAP_DESIGN.md
 ```

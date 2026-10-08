@@ -1,15 +1,14 @@
-# NetgenCxxWrap / Netgen.jl — CxxWrap design
+# NetgenCxxWrap — CxxWrap design
 
 ## What this is
 
-`Netgen` is a **CxxWrap-based Julia binding and extension layer for the exported
-C++ API of NGSolve/Netgen**, with additional Julia-side utilities for
-geometry-backed mesh hierarchies and geometric-multigrid / hp-adaptivity
-integration.
+`libnetgen_cxxwrap` is a CxxWrap binding of the exported C++ API of
+NGSolve/Netgen. Delone.jl loads that module and adds the Julia-side
+utilities for geometry-backed mesh hierarchies.
 
 The native binding is `libnetgen_cxxwrap` (built by `NetgenCxxWrap_jll`), a
 [CxxWrap](https://github.com/JuliaInterop/CxxWrap.jl) module linked against the
-prebuilt NGSolve/Netgen libraries. The Julia package `Netgen.jl` loads it via
+prebuilt NGSolve/Netgen libraries. Delone.jl loads it via
 `@wrapmodule`/`@initcxx` and layers Julian conveniences on top.
 
 ## Why CxxWrap (and not a hand-written C ABI)
@@ -32,10 +31,9 @@ NGSolveNetgen_jll   upstream NGSolve/Netgen binary (+ OCC). Stays close to upstr
 NetgenCxxWrap_jll   builds libnetgen_cxxwrap: a CxxWrap module linked against
                     NGSolveNetgen_jll + OCCT_jll + libcxxwrap_julia_jll. Boring,
                     comprehensive wrapper; no logic of its own.
-Netgen.jl          loads libnetgen_cxxwrap via CxxWrap.@wrapmodule; adds Julian
-                    conveniences (points, tetrahedra, generate_mesh, refine!,
-                    uniform_hierarchy, …) and GMG/hp-hierarchy helpers.
-consumer           uses Netgen.jl as the geometry-backed mesh-hierarchy backend.
+Delone.jl          loads libnetgen_cxxwrap via CxxWrap.@wrapmodule and adds
+                    the Julian conveniences and hierarchy helpers.
+consumer           uses Delone.jl as the geometry-backed mesh-hierarchy backend.
 ```
 
 ## Relationship to NGSolveNetgen_jll
@@ -64,20 +62,21 @@ OCC / BREP / STEP / IGES geometry
 → Netgen OCC loader (LoadOCC_BREP/STEP/IGES)
 → Netgen mesh generation (NetgenGeometry::GenerateMesh)
 → Netgen refinement (Refinement::Refine, geometry-aware)
-→ Netgen.jl mesh extraction + hierarchy utilities (points, tetrahedra, …)
+→ Delone.jl mesh extraction and hierarchy utilities
 → consumer GMG integration
 ```
 
-A secondary CSG route (Netgen.jl geometry DSL → serialize to `.geo`/CSG text →
+A secondary CSG route (a Julia geometry DSL → serialize to `.geo`/CSG text →
 Netgen's own parser/loader) can be added later: Netgen's own parser may use the
 hidden constructors internally, which is fine. External wrapper code must not.
 
-## What is wrapped — strict 1:1, no invented names
+## What is wrapped
 
-Every binding forwards to exactly one Netgen member and carries Netgen's own
-name. There are no combiner functions and no renames; container-returning methods
-that need bulk transfer are deferred to a later pointer + `unsafe_load` round
-(higher-level logic belongs in `Netgen.jl`). Currently bound:
+A wrapped name matches Netgen's own member, except `new_mesh` (the
+`std::shared_ptr<Mesh>` allocator) and the OCC bridge, which does not
+expose a Julia `TopoDS` type. OpenCASCADE modeling lives in
+OpenCascadeCxxWrap. Higher-level logic belongs in Delone.jl. Currently
+bound:
 
 - value types `Point3d`, `Vec3d` (`X`/`Y`/`Z`, `Vec3d::Length`);
 - `MeshPoint` (coordinates via the `operator()(i)` functor, 0-based, as in Netgen);
@@ -105,15 +104,23 @@ that need bulk transfer are deferred to a later pointer + `unsafe_load` round
   `GetNElements`, `GetNNodes`, `GetParentNodes`, `GetParentElement`,
   `GetParentSElement`, `Curve`, `GetCurveOrder`, `UpdateTopology` — the
   refinement-hierarchy (levels + parent maps) read side. Its indices are 0-based
-  with `-1` = none; `Netgen.jl` normalizes to 1-based / `0` = none.
+  with `-1` = none; Delone.jl normalizes to 1-based / `0` = none.
 - material / boundary labels: `GetMaterial`/`SetMaterial`, `GetBCName`/`SetBCName`
   (1-based region numbers, as carried by `Element*::GetIndex`);
 - OCC loaders `LoadOCC_STEP`, `LoadOCC_IGES`, `LoadOCC_BREP` (each separately —
   no combined loader);
-- OCC **construction** from OpenCASCADE primitives: `OCC_Box`, `OCC_Sphere`,
-  `OCC_Cylinder` (build a `TopoDS_Shape` via `BRepPrimAPI_*` and wrap it in an
-  `OCCGeometry`, whose ctor runs `BuildFMap` so it is mesh-ready). OpenCASCADE
-  modeling is OCCT's API, not Netgen's, but the wrapper already links OCCT;
+- OCC bridge in `netgen_occ_bridge.cpp`: `OCCGeometry_from_brep_string`,
+  `OCC_NrFaces`, `OCC_FaceBoundingBox`, `OCC_IdentifyFacesBulk`,
+  `OCC_RebuildGeometry`. There is no `OCC_Box`, `OCC_Sphere`, or
+  `OCC_Cylinder`;
+- `netgen_ngx2.cpp`: hp orders, `NgxRefine`, `HPRefinement`, `SplitAlfeld`,
+  cluster representatives, and `MeshVolume` / `OptimizeVolume`;
+- `netgen_ngx3.cpp`: element transformations, parent edges and faces,
+  and periodic vertex pairs;
+- `netgen_stl.cpp`: `STLGeometry`, `STLParameters`, `LoadSTL`;
+- `netgen_gprim.cpp`: `Box3d`, `Point3dTree`, `LoadSplineGeometry2d`;
+- `netgen_mesh2.cpp`: `EdgeDescriptor` and the remaining `Mesh` methods
+  (`GetBox`, local mesh size, splits, open elements, region names);
 - **2D geometry** (`geom2d/csg2d`): `Circle`, `Rectangle` → `Solid2d`; boolean
   ops `+`/`*`/`-` (union/intersection/difference, bound on Julia `Base` via
   `set_override_module`); inline attribute setters `BC`/`Maxh`/`Mat` (the
@@ -122,31 +129,23 @@ that need bulk transfer are deferred to a later pointer + `unsafe_load` round
   `NetgenGeometry`) and `GenerateMesh`. 2D refinement projects boundary nodes
   onto the splines (curved boundaries are followed).
 
-Julian conveniences in `Netgen.jl` (the only place higher-level logic lives):
-`load_step/iges/brep`, `load_geometry` (extension dispatch), `generate_mesh(geom;
-maxh)`, `points`, `tetrahedra`, `surface_triangles`, `refine!` (uniform),
-`mark_for_refinement!` + `bisect!` (adaptive/marked), `make_second_order!`, the
-GMG-hierarchy readers `num_levels`, `level_nvertices`, `parent_nodes`
-(prolongation stencil), `parent_elements`, `parent_surface_elements`, and the
-multi-level builder `copy_mesh` / `uniform_hierarchy` → `MeshHierarchy` (a stack
-of nested distinct meshes with per-level `prolongation`, `coarsest`/`finest`).
+Julian conveniences live in Delone.jl. This JLL does not add them.
 
 ## How this supports the GMG roadmap
 
 Geometry-aware refinement (new boundary points project onto the true OCC
 surface) plus the refinement-hierarchy parent maps (`mlbetweennodes` →
 `point_parents`) are the raw ingredients for prolongation/restriction operators.
-`Netgen.jl` composes mesh generation + refinement into hierarchies
-(`uniform_hierarchy`, later an adaptive driver with synthetic indicators); a
-consumer takes extracted points/connectivity/topology/tags into its mesh carrier,
-function spaces, matrix-free operators, and GMG transfers.
+Delone.jl is where mesh generation and refinement are composed into
+hierarchies. A consumer takes extracted points, connectivity, topology,
+and tags into its own mesh carrier.
 
-## Status (built & tested locally, macOS arm64)
+## Status
 
-Phases 1–8 are working and tested against the stock NGSolveNetgen artifact via a
-local CxxWrap build (`Netgen.jl/gen/build_local.jl`): module load, value types,
-mesh core + extraction, OCC load + mesh generation, uniform refinement + parent
-maps, topology, and uniform hierarchies. The adaptive-hierarchy driver (Phase 9)
-and downstream solver integration (Phase 10) are future Julia-side work. Cross-platform
-binaries come from `NetgenCxxWrap_jll/build_tarballs.jl` once `NGSolveNetgen_jll`
-is registered (the recipe `Dependency`s resolve from the registry).
+This note describes the source tree. It is not a record of a passing
+local run. Commit `2985283` states that rebuilding through
+`gen/build_local.jl` segfaults on basic STEP loading even from this
+repo's unmodified prior source, and that the failure looks like a local
+toolchain mismatch rather than that change. The binary Delone.jl
+consumes is the `libnetgen_cxxwrap` artifact named in the README;
+commits after `301822b`, including `2985283`, are not in that artifact.
