@@ -17,13 +17,21 @@ This JLL keeps Netgen meshing plus **`OCCGeometry_from_brep_string`** only.
 - Builds `libnetgen_cxxwrap` (a `JLCXX_MODULE`). `bundled/CMakeLists.txt`
   compiles eleven translation units; `bundled/src/netgen.cpp` is only the
   registrar (`define_julia_module` plus `register_*` calls).
-- **Strict 1:1 wrapping**: every wrapped name matches Netgen's own C++ name
-  (`Mesh::GetNP` → `GetNP`, `UpdateTopology`, `GetTopology`, `GetNEdges`,
-  `LoadOCC_STEP`, `GenerateMesh`, `Refine`, `Point`, `VolumeElement`, `PNum`, …)
-  and forwards to exactly one Netgen member — no invented or combiner functions.
-  The one unavoidable exception is `new_mesh`, the `std::shared_ptr<Mesh>`
-  allocator (CxxWrap cannot expose the `Mesh` constructor under the type name,
-  and `Mesh` is not value-copyable).
+- A wrapped name matches Netgen's own C++ member, except where CxxWrap
+  cannot spell the overload. Allocators are `new_mesh`, `new_localh`,
+  and `new_point3dtree`. `assign` is `Mesh::operator=`. A template takes
+  a dimension suffix (`SetRefinementFlag2` / `3`, `GetMaterialCD0`–`3`,
+  `ElementTransformation33` / `23` / `22` / `13` / `12`,
+  `MultiElementTransformation33` / `22`, `FindElementOfPoint1` / `2` /
+  `3`). An overload takes a qualifier: `GetHPointIndex` is
+  `Mesh::GetH(PointIndex)`, `GetFaceDescriptorMut` is the mutable
+  `GetFaceDescriptor`, and `GetRegionNameVolume` / `Surface` / `Segment`
+  are `GetRegionName`. `NgxRefine` is `Ngx_Mesh::Refine`.
+  `EnableTopologyTable` is `MeshTopology::EnableTable`.
+  `GetMaterialCD0`–`3` forward to `Mesh::GetMaterial`, `GetBCName`,
+  `GetCD2Name`, and `GetCD3Name`. The OCC bridge and
+  `LoadSplineGeometry2d` (`SplineGeometry2d::Load`) are not Netgen
+  member names.
 - **Depends on** `NGSolveNetgen_jll` (links prebuilt `libnglib`/`libngcore` +
   headers), `OCCT_jll` (OpenCASCADE), and `libcxxwrap_julia_jll` (JlCxx).
 - Uses only **exported** Netgen symbols. The hidden CSG primitive constructors

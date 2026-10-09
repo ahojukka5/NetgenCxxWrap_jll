@@ -72,11 +72,21 @@ hidden constructors internally, which is fine. External wrapper code must not.
 
 ## What is wrapped
 
-A wrapped name matches Netgen's own member, except `new_mesh` (the
-`std::shared_ptr<Mesh>` allocator) and the OCC bridge, which does not
-expose a Julia `TopoDS` type. OpenCASCADE modeling lives in
-OpenCascadeCxxWrap. Higher-level logic belongs in Delone.jl. Currently
-bound:
+A wrapped name matches a Netgen member when CxxWrap can spell it.
+Allocators are `new_mesh`, `new_localh`, and `new_point3dtree`. `assign`
+is `Mesh::operator=`. A template takes a dimension suffix
+(`SetRefinementFlag2` / `3`, `ElementTransformation33` / `23` / `22` /
+`13` / `12`, `MultiElementTransformation33` / `22`,
+`FindElementOfPoint1` / `2` / `3`). An overload takes a qualifier:
+`GetHPointIndex` is `Mesh::GetH(PointIndex)`, `GetFaceDescriptorMut` is
+the mutable `GetFaceDescriptor`, and `GetRegionNameVolume` / `Surface` /
+`Segment` are `GetRegionName`. `NgxRefine` is `Ngx_Mesh::Refine`.
+`EnableTopologyTable` is `MeshTopology::EnableTable`. `GetMaterialCD0`–`3`
+forward to `Mesh::GetMaterial`, `GetBCName`, `GetCD2Name`, and
+`GetCD3Name`. The OCC bridge does not expose a Julia `TopoDS` type, and
+`LoadSplineGeometry2d` is `SplineGeometry2d::Load`. OpenCASCADE modeling
+lives in OpenCascadeCxxWrap. Higher-level logic belongs in Delone.jl.
+Currently bound:
 
 - value types `Point3d`, `Vec3d` (`X`/`Y`/`Z`, `Vec3d::Length`);
 - `MeshPoint` (coordinates via the `operator()(i)` functor, 0-based, as in Netgen);

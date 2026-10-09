@@ -1,7 +1,7 @@
-// NetgenCxxWrap — a strict, boring 1:1 CxxWrap binding of NGSolve/Netgen's
-// exported C++ API. Every wrapped name matches Netgen's own. No invented or
-// combiner functions. All higher-level logic lives in Delone.jl.
-// One unavoidable exception: `new_mesh` (shared_ptr allocator for Mesh).
+// NetgenCxxWrap — a CxxWrap binding of NGSolve/Netgen's exported C++ API.
+// A name matches Netgen's own member when CxxWrap can spell it. Allocators,
+// template suffixes, and overload qualifiers are listed in the README.
+// Higher-level logic lives in Delone.jl.
 // Built against NGSolveNetgen_jll (stock build; exported symbols only).
 // Netgen CxxWrap module (meshing/refinement only). OCCT modeling lives in
 // OpenCascadeCxxWrap_jll (libopencascade_cxxwrap).
